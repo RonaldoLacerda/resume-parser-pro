@@ -25,7 +25,7 @@ const CandidatoContext = createContext<Store | null>(null);
 
 function mesclarObjeto<T extends Record<string, unknown>>(
   atual: T,
-  novo: Partial<T>,
+  novo: Record<string, unknown>,
   prefixo: string,
   marcados: Set<string>,
 ) {
