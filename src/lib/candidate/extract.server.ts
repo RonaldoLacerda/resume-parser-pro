@@ -78,6 +78,14 @@ const EXTRACAO_SCHEMA = obj({
     resumoProfissional: str,
     objetivosProfissionais: str,
   }),
+  evidencias: {
+    type: "array",
+    items: obj({
+      campo: str,
+      confianca: { type: "number" },
+      trecho: str,
+    }),
+  },
 });
 
 const INSTRUCOES = [
@@ -88,7 +96,12 @@ const INSTRUCOES = [
   "Experiências e formações em ordem da mais recente para a mais antiga.",
   "Marque atual=true quando a experiência estiver em andamento e deixe desligamento vazio.",
   "Atividades exercidas: no máximo 400 caracteres, em texto corrido.",
+  "Em 'evidencias', inclua um item para CADA campo preenchido e para cada experiência/formação:",
+  "campo = caminho do dado ('geral.nomeCompleto', 'endereco.cep', 'profissionais.idiomas', 'experiencias.0', 'formacoes.1');",
+  "confianca = número de 0 a 1 indicando o quanto o dado é explícito na fonte (1 = literal, <0.6 = inferido);",
+  "trecho = citação curta e literal (até 160 caracteres) do texto original que embasou o dado.",
 ].join(" ");
+
 
 
 /** Limite de contexto: currículos raramente passam disso e evita custo desnecessário. */

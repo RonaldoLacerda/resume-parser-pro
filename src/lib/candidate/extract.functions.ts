@@ -39,3 +39,28 @@ export const extrairCurriculo = createServerFn({ method: "POST" })
       return { ok: false, status, message };
     }
   });
+
+const audioSchema = z.object({
+  filename: z.string().default("trecho.wav"),
+  payload: z.string(),
+});
+
+type ResultadoTranscricao =
+  | { ok: true; texto: string }
+  | { ok: false; status: number; message: string };
+
+/** Transcreve um trecho isolado — permite regravar só o pedaço ruim sem refazer o resto. */
+export const transcreverTrecho = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => audioSchema.parse(input))
+  .handler(async ({ data }): Promise<ResultadoTranscricao> => {
+    const mod = await import("./extract.server");
+    try {
+      const texto = await mod.transcreverAudio(data.payload, data.filename);
+      return { ok: true, texto };
+    } catch (error) {
+      const status = (error as { status?: number }).status ?? 500;
+      const message = error instanceof Error ? error.message : "Falha ao transcrever.";
+      return { ok: false, status, message };
+    }
+  });
+
