@@ -6,102 +6,90 @@ import { responderJson, transcrever } from "@/lib/ai/gateway.server";
  */
 
 const str = { type: "string" } as const;
+const strArray = { type: "array", items: str } as const;
 
-const EXTRACAO_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    geral: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        nomeCompleto: str,
-        email: str,
-        cpf: str,
-        dataNascimento: str,
-        sexo: str,
-        estadoCivil: str,
-        ddiCelular: str,
-        celular: str,
-        telefone: str,
-        rg: str,
-        paisNascimento: str,
-        estadoNascimento: str,
-        cidadeNascimento: str,
-      },
-    },
-    endereco: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        pais: str,
-        cep: str,
-        estado: str,
-        cidade: str,
-        bairro: str,
-        logradouro: str,
-        numero: str,
-        complemento: str,
-      },
-    },
-    experiencias: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          empresa: str,
-          cargo: str,
-          atual: { type: "boolean" },
-          inicio: str,
-          desligamento: str,
-          cidade: str,
-          estado: str,
-          tipoContrato: str,
-          atividades: str,
-        },
-      },
-    },
-    formacoes: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          nivelEnsino: str,
-          situacao: str,
-          curso: str,
-          instituicao: str,
-          inicio: str,
-          conclusao: str,
-          modalidade: str,
-        },
-      },
-    },
-    profissionais: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        idiomas: { type: "array", items: str },
-        cargosInteresse: { type: "array", items: str },
-        conhecimentos: { type: "array", items: str },
-        pretensaoSalarial: str,
-        resumoProfissional: str,
-        objetivosProfissionais: str,
-      },
-    },
+/** OpenAI strict mode exige `required` com todas as chaves; use "" quando não houver dado. */
+function obj<T extends Record<string, unknown>>(properties: T) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties,
+    required: Object.keys(properties),
+  } as const;
+}
+
+const EXTRACAO_SCHEMA = obj({
+  geral: obj({
+    nomeCompleto: str,
+    email: str,
+    cpf: str,
+    dataNascimento: str,
+    sexo: str,
+    estadoCivil: str,
+    ddiCelular: str,
+    celular: str,
+    telefone: str,
+    rg: str,
+    paisNascimento: str,
+    estadoNascimento: str,
+    cidadeNascimento: str,
+  }),
+  endereco: obj({
+    pais: str,
+    cep: str,
+    estado: str,
+    cidade: str,
+    bairro: str,
+    logradouro: str,
+    numero: str,
+    complemento: str,
+  }),
+  experiencias: {
+    type: "array",
+    items: obj({
+      empresa: str,
+      cargo: str,
+      atual: { type: "boolean" },
+      inicio: str,
+      desligamento: str,
+      cidade: str,
+      estado: str,
+      tipoContrato: str,
+      atividades: str,
+    }),
   },
-} as const;
+  formacoes: {
+    type: "array",
+    items: obj({
+      nivelEnsino: str,
+      situacao: str,
+      curso: str,
+      instituicao: str,
+      inicio: str,
+      conclusao: str,
+      modalidade: str,
+    }),
+  },
+  profissionais: obj({
+    idiomas: strArray,
+    cargosInteresse: strArray,
+    conhecimentos: strArray,
+    pretensaoSalarial: str,
+    resumoProfissional: str,
+    objetivosProfissionais: str,
+  }),
+});
 
 const INSTRUCOES = [
   "Você extrai dados de currículos brasileiros para preencher um cadastro.",
   "Priorize: dados gerais, experiências profissionais e formação acadêmica.",
-  "Responda apenas com o JSON do schema. Omita campos sem informação — nunca invente dados.",
+  "Responda apenas com o JSON do schema. Sem informação, use string vazia ou lista vazia — nunca invente dados.",
   "Datas de início/conclusão no formato mm/aaaa; data de nascimento dd/mm/aaaa.",
   "Experiências e formações em ordem da mais recente para a mais antiga.",
   "Marque atual=true quando a experiência estiver em andamento e deixe desligamento vazio.",
   "Atividades exercidas: no máximo 400 caracteres, em texto corrido.",
 ].join(" ");
+
 
 /** Limite de contexto: currículos raramente passam disso e evita custo desnecessário. */
 const MAX_CHARS = 18000;
