@@ -8,27 +8,40 @@ import {
   type Extracao,
 } from "./types";
 
+/**
+ * Estado global do cadastro: edição manual, persistência local e aplicação
+ * não destrutiva dos dados vindos da IA. Ver DOCUMENTACAO.md, seção 6.3.
+ */
+
 const STORAGE_KEY = "menvie:candidato";
 
 type CampoPreenchido = string;
 
 type Store = {
   candidato: Candidato;
+  /** Caminhos preenchidos pela IA ("geral.cpf", "experiencia.<id>") para destaque visual. */
   preenchidosPelaIa: Set<CampoPreenchido>;
+  /** Edição manual de uma seção do cadastro. */
   set: <K extends keyof Candidato>(secao: K, valor: Partial<Candidato[K]>) => void;
   replace: (proximo: Candidato) => void;
+  /** Valida o payload da IA e preenche apenas o que estiver vazio. */
   aplicarExtracao: (bruto: unknown) => { campos: number; experiencias: number; formacoes: number };
   limpar: () => void;
 };
 
 const CandidatoContext = createContext<Store | null>(null);
 
+/**
+ * Copia para `atual` apenas as chaves novas cujo valor atual esteja vazio,
+ * registrando cada caminho preenchido em `marcados`.
+ */
 function mesclarObjeto<T extends Record<string, unknown>>(
   atual: T,
   novo: Record<string, unknown>,
   prefixo: string,
   marcados: Set<string>,
 ) {
+
   const resultado = { ...atual };
   let contador = 0;
   for (const [chave, valor] of Object.entries(novo)) {

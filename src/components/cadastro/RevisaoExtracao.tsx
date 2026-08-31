@@ -1,4 +1,10 @@
+/**
+ * Etapa de revisão do "Currículo IA": lista cada dado proposto com score de
+ * confiança e o trecho original citado, permitindo aceitar, editar ou recusar
+ * antes de aplicar ao cadastro. Ver DOCUMENTACAO.md, seção 6.2.
+ */
 import { useMemo, useState } from "react";
+
 import { Check, Quote, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TextoInput } from "./Campos";
