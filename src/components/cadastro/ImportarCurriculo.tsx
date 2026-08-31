@@ -1,4 +1,11 @@
+/**
+ * Etapa 0 do cadastro: upload de vários materiais (PDF, DOCX, foto, TXT) e
+ * gravação de trechos de áudio com análise de qualidade. Consolida todas as
+ * extrações em uma lista única de propostas revisáveis.
+ * Ver DOCUMENTACAO.md, seções 3 a 6.1.
+ */
 import { useCallback, useRef, useState } from "react";
+
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertTriangle,
