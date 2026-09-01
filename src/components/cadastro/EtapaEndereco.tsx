@@ -43,13 +43,12 @@ export function EtapaEndereco() {
       <Campo label="Complemento" ia={ia("complemento")}>
         <TextoInput {...campo("complemento")} />
       </Campo>
-      <Campo label="Ponto de Referência" ia={ia("pontoReferencia")}>
+      <Campo label="Ponto de Referência">
         <TextoInput {...campo("pontoReferencia")} />
       </Campo>
-      <Campo label="Região" ia={ia("regiao")}>
+      <Campo label="Região">
         <TextoInput {...campo("regiao")} />
       </Campo>
-
     </div>
   );
 }
