@@ -130,9 +130,10 @@ export function normalizarMesAno(v: string) {
   const iso = t.match(/^(\d{4})-(\d{2})/);
   if (iso) return `${iso[2]}/${iso[1]}`;
   const num = t.match(/(\d{1,2})\s*[\/.-]\s*(\d{4})/);
-  if (num) return `${num[1].padStart(2, "0")}/${num[2]}`;
+  if (num) return `${(num[1] ?? "").padStart(2, "0")}/${num[2]}`;
   const ext = chave(t).match(/^([a-z]{3})[a-z]*\s*(?:de\s*)?(\d{4})$/);
-  if (ext && MESES[ext[1]]) return `${MESES[ext[1]]}/${ext[2]}`;
+  const mes = ext?.[1] ? MESES[ext[1]] : undefined;
+  if (ext && mes) return `${mes}/${ext[2]}`;
   return t;
 }
 
@@ -142,7 +143,7 @@ export function normalizarDataCompleta(v: string) {
   const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
   const br = t.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
-  if (br) return `${br[1].padStart(2, "0")}/${br[2].padStart(2, "0")}/${br[3]}`;
+  if (br) return `${(br[1] ?? "").padStart(2, "0")}/${(br[2] ?? "").padStart(2, "0")}/${br[3]}`;
   return t;
 }
 
@@ -162,7 +163,7 @@ function aplicar(obj: Dict | undefined, regras: Record<string, (v: string) => st
  * apenas para UF (evita lixo no select) — nos demais mantêm o texto original.
  */
 export function normalizarExtracao<T extends Dict>(bruto: T): T {
-  aplicar(bruto.geral as Dict, {
+  aplicar(bruto["geral"] as Dict, {
     cpf: normalizarCpf,
     celular: normalizarTelefone,
     telefone: normalizarTelefone,
@@ -171,25 +172,25 @@ export function normalizarExtracao<T extends Dict>(bruto: T): T {
     estadoCivil: normalizarEstadoCivil,
     estadoNascimento: normalizarUf,
   });
-  aplicar(bruto.endereco as Dict, { cep: normalizarCep, estado: normalizarUf });
-  aplicar(bruto.profissionais as Dict, {
+  aplicar(bruto["endereco"] as Dict, { cep: normalizarCep, estado: normalizarUf });
+  aplicar(bruto["profissionais"] as Dict, {
     disponibilidadeMudanca: normalizarSimNao,
     disponibilidadeViagens: normalizarSimNao,
   });
-  for (const exp of (Array.isArray(bruto.experiencias) ? bruto.experiencias : []) as Dict[]) {
+  for (const exp of (Array.isArray(bruto["experiencias"]) ? bruto["experiencias"] : []) as Dict[]) {
     aplicar(exp, {
       estado: normalizarUf,
       tipoContrato: normalizarTipoContrato,
       inicio: normalizarMesAno,
       desligamento: normalizarMesAno,
     });
-    if (exp.atual === true) exp.desligamento = "";
-    if (!exp.atual && /atual|presente|hoje|momento/i.test(s(exp.desligamento))) {
-      exp.atual = true;
-      exp.desligamento = "";
+    if (exp["atual"] === true) exp["desligamento"] = "";
+    if (!exp["atual"] && /atual|presente|hoje|momento/i.test(s(exp["desligamento"]))) {
+      exp["atual"] = true;
+      exp["desligamento"] = "";
     }
   }
-  for (const f of (Array.isArray(bruto.formacoes) ? bruto.formacoes : []) as Dict[]) {
+  for (const f of (Array.isArray(bruto["formacoes"]) ? bruto["formacoes"] : []) as Dict[]) {
     aplicar(f, {
       nivelEnsino: normalizarNivelEnsino,
       situacao: normalizarSituacao,
