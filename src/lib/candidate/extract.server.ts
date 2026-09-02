@@ -1,4 +1,6 @@
 import { responderJson, transcrever } from "@/lib/ai/gateway.server";
+import { MODALIDADES, NIVEIS_ENSINO, SITUACOES, TIPOS_CONTRATO, UFS } from "./opcoes";
+import { normalizarExtracao } from "./normalizar";
 
 /**
  * Prompt e JSON Schema únicos, compartilhados por currículo em texto,
