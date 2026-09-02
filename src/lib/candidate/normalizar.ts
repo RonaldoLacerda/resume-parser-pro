@@ -70,11 +70,12 @@ export const normalizarTipoContrato = (v: string) =>
   });
 
 export const normalizarNivelEnsino = (v: string) =>
+  // Ordem importa: "pós-graduação" contém "graduação", então os mais específicos vêm antes.
   casarOpcao(v, NIVEIS_ENSINO, {
-    fundamental: "Ensino Fundamental", medio: "Ensino Médio", tecnic: "Técnico",
-    tecnolog: "Tecnólogo", bacharel: "Superior", licenciatura: "Superior", graduac: "Superior",
-    superior: "Superior", mba: "Pós-graduação", especializ: "Pós-graduação", pos: "Pós-graduação",
-    mestr: "Mestrado", doutor: "Doutorado",
+    doutor: "Doutorado", mestr: "Mestrado", mba: "Pós-graduação", especializ: "Pós-graduação",
+    pos: "Pós-graduação", fundamental: "Ensino Fundamental", medio: "Ensino Médio",
+    tecnolog: "Tecnólogo", tecnic: "Técnico", bacharel: "Superior", licenciatura: "Superior",
+    graduac: "Superior", superior: "Superior",
   });
 
 export const normalizarSituacao = (v: string) =>
