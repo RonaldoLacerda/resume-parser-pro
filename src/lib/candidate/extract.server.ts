@@ -20,6 +20,11 @@ function obj<T extends Record<string, unknown>>(properties: T) {
   } as const;
 }
 
+/**
+ * Schema espelha 1:1 os campos do formulário (types.ts) que fazem sentido
+ * extrair de um currículo/áudio. Campos puramente operacionais (senha,
+ * "como nos encontrou", antecedentes) ficam de fora de propósito.
+ */
 const EXTRACAO_SCHEMA = obj({
   geral: obj({
     nomeCompleto: str,
@@ -31,6 +36,8 @@ const EXTRACAO_SCHEMA = obj({
     ddiCelular: str,
     celular: str,
     telefone: str,
+    nomePai: str,
+    nomeMae: str,
     rg: str,
     paisNascimento: str,
     estadoNascimento: str,
@@ -45,6 +52,8 @@ const EXTRACAO_SCHEMA = obj({
     logradouro: str,
     numero: str,
     complemento: str,
+    pontoReferencia: str,
+    regiao: str,
   }),
   experiencias: {
     type: "array",
