@@ -107,6 +107,15 @@ Instruções principais dadas ao modelo:
 
 O texto de entrada é normalizado e truncado em 18.000 caracteres (`MAX_CHARS`).
 
+### 3.3.1 Normalização pós-IA — `src/lib/candidate/normalizar.ts`
+
+Logo após a resposta do modelo, sem custo de tokens, `normalizarExtracao()` converte os
+valores para o formato exato dos selects/máscaras: UF por extenso → sigla; sexo, estado civil,
+tipo de contrato, nível de ensino, situação e modalidade → opções do formulário (sinônimos +
+prefixo); CPF/CEP/telefone com máscara; datas `aaaa-mm` / "março de 2021" → `mm/aaaa`;
+"atual/presente" em desligamento → `atual=true`. O prompt também lista as enumerações aceitas,
+então a normalização é uma segunda barreira, não a única.
+
 ### 3.4 Fronteira servidor — `src/lib/candidate/extract.functions.ts`
 
 Dois endpoints RPC (equivalentes a duas rotas HTTP em outra linguagem):
@@ -239,7 +248,9 @@ Rodapé mostra quantos itens estão selecionados e alerta sobre confiança baixa
 | `src/lib/candidate/extract.server.ts` | Prompt, JSON Schema e chamadas de extração |
 | `src/lib/candidate/extract.functions.ts` | Endpoints de extração e transcrição |
 | `src/lib/ai/gateway.server.ts` | Acesso único ao provedor de IA e erros |
+| `src/lib/candidate/normalizar.ts` | Normalização pós-IA (UF, selects, máscaras CPF/CEP/telefone/datas) |
 | `src/lib/candidate/consolidar.ts` | Consolidação multi-arquivo e propostas |
+| `CUSTOS_IA.md` | Custo por anexo e comparativo de modelos |
 | `src/lib/candidate/audio.ts` | Gravação PCM→WAV e análise de qualidade |
 | `src/lib/candidate/store.tsx` | Estado global, persistência e merge não destrutivo |
 | `src/components/cadastro/ImportarCurriculo.tsx` | Etapa 0: upload múltiplo + áudio |

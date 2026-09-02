@@ -43,6 +43,8 @@ const ROTULOS: Record<string, string> = {
   ddiCelular: "DDI",
   celular: "Celular",
   telefone: "Telefone",
+  nomePai: "Nome do pai",
+  nomeMae: "Nome da mãe",
   rg: "RG",
   paisNascimento: "País de nascimento",
   estadoNascimento: "Estado de nascimento",
@@ -55,12 +57,16 @@ const ROTULOS: Record<string, string> = {
   logradouro: "Logradouro",
   numero: "Número",
   complemento: "Complemento",
+  pontoReferencia: "Ponto de referência",
+  regiao: "Região",
   idiomas: "Idiomas",
   cargosInteresse: "Cargos de interesse",
   conhecimentos: "Conhecimentos",
   pretensaoSalarial: "Pretensão salarial",
   resumoProfissional: "Resumo profissional",
   objetivosProfissionais: "Objetivos profissionais",
+  disponibilidadeMudanca: "Disponibilidade para mudança",
+  disponibilidadeViagens: "Disponibilidade para viagens",
 };
 
 const SECAO_ROTULO: Record<PropostaCampo["secao"], string> = {
