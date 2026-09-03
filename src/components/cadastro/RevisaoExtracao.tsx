@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 
-import { Check, Quote, RotateCcw, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Quote, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TextoInput } from "./Campos";
 import {
