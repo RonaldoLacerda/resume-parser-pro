@@ -137,13 +137,17 @@ export function RevisaoExtracao({
         ) : null}
       </div>
 
-      <div className="space-y-6">
-        {secoes.map(([secao, lista]) => (
-          <section key={secao}>
-            <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-              {rotuloSecao(secao)}
-            </h2>
-            <div className="space-y-2">
+      <div className="space-y-3">
+        {secoes.map(([secao, lista]) => {
+          const titulo = rotuloSecao(secao);
+          return (
+            <Grupo
+              key={secao}
+              titulo={titulo}
+              quantidade={lista.length}
+              aberto={abertos.has(titulo)}
+              aoAlternar={() => alternar(titulo)}
+            >
               {lista.map((campo) => (
                 <div
                   key={campo.id}
@@ -190,51 +194,51 @@ export function RevisaoExtracao({
                   <Trecho trecho={campo.trecho} origem={campo.origem} />
                 </div>
               ))}
-            </div>
-          </section>
-        ))}
+            </Grupo>
+          );
+        })}
 
         {itens.length > 0 ? (
-          <section>
-            <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-              Experiências e formações
-            </h2>
-            <div className="space-y-2">
-              {itens.map((item) => (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "rounded-lg border p-3",
-                    item.aceito ? "border-border bg-card" : "border-dashed border-border bg-muted/30 opacity-70",
-                  )}
-                >
-                  <div className="flex flex-wrap items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={item.aceito}
-                      onChange={(e) =>
-                        setItens((atual) =>
-                          atual.map((i) =>
-                            i.id === item.id ? { ...i, aceito: e.target.checked } : i,
-                          ),
-                        )
-                      }
-                      className="size-4 accent-[var(--primary)]"
-                      aria-label={`Usar ${item.rotulo}`}
-                    />
-                    <span className="flex-1 text-sm text-foreground">
-                      <span className="mr-2 rounded bg-muted px-1.5 py-0.5 text-[11px] uppercase text-muted-foreground">
-                        {item.tipo === "experiencia" ? "Experiência" : "Formação"}
-                      </span>
-                      {item.rotulo}
+          <Grupo
+            titulo="Experiências e formações"
+            quantidade={itens.length}
+            aberto={abertos.has("Experiências e formações")}
+            aoAlternar={() => alternar("Experiências e formações")}
+          >
+            {itens.map((item) => (
+              <div
+                key={item.id}
+                className={cn(
+                  "rounded-lg border p-3",
+                  item.aceito ? "border-border bg-card" : "border-dashed border-border bg-muted/30 opacity-70",
+                )}
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={item.aceito}
+                    onChange={(e) =>
+                      setItens((atual) =>
+                        atual.map((i) =>
+                          i.id === item.id ? { ...i, aceito: e.target.checked } : i,
+                        ),
+                      )
+                    }
+                    className="size-4 accent-[var(--primary)]"
+                    aria-label={`Usar ${item.rotulo}`}
+                  />
+                  <span className="flex-1 text-sm text-foreground">
+                    <span className="mr-2 rounded bg-muted px-1.5 py-0.5 text-[11px] uppercase text-muted-foreground">
+                      {item.tipo === "experiencia" ? "Experiência" : "Formação"}
                     </span>
-                    <Selo confianca={item.confianca} />
-                  </div>
-                  <Trecho trecho={item.trecho} origem={item.origem} />
+                    {item.rotulo}
+                  </span>
+                  <Selo confianca={item.confianca} />
                 </div>
-              ))}
-            </div>
-          </section>
+                <Trecho trecho={item.trecho} origem={item.origem} />
+              </div>
+            ))}
+          </Grupo>
         ) : null}
       </div>
 
