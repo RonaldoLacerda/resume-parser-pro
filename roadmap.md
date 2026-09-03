@@ -8,3 +8,4 @@
 - [x] Schema de extração revalidado (nomePai/nomeMae, ponto de referência/região, disponibilidade mudança/viagens)
 - [x] Prompt com enumerações dos selects + normalização determinística pós-IA (`normalizar.ts`)
 - [x] `CUSTOS_IA.md` com custo por anexo e comparativo de modelos
+- [x] Revisão de extração: agrupar campos em dropdowns por etapa (Dados Gerais, Endereço, Dados Profissionais, Experiências e Formações)

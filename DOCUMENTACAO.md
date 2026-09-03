@@ -205,7 +205,8 @@ Ações:
 
 ### 6.2 `RevisaoExtracao.tsx`
 
-Lista as propostas agrupadas por seção. Para cada campo mostra:
+Lista as propostas em **dropdowns colapsáveis agrupados por etapa**
+(Dados gerais, Endereço, Dados profissionais, Experiências e formações), cada um com contador de itens. Para cada campo mostra:
 checkbox de aceite, rótulo, **valor editável**, selo de confiança
 (`Alta/Média/Baixa + %`) e o **trecho original citado** com o arquivo de origem.
 Experiências e formações aparecem como cards com o mesmo selo e trecho.
