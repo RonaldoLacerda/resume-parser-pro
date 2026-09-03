@@ -39,6 +39,44 @@ function Trecho({ trecho, origem }: { trecho: string; origem: string }) {
   );
 }
 
+/** Grupo colapsável (dropdown) por etapa do cadastro, com contador de itens. */
+function Grupo({
+  titulo,
+  quantidade,
+  aberto,
+  aoAlternar,
+  children,
+}: {
+  titulo: string;
+  quantidade: number;
+  aberto: boolean;
+  aoAlternar: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-lg border border-border bg-card">
+      <button
+        type="button"
+        onClick={aoAlternar}
+        aria-expanded={aberto}
+        className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+      >
+        <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          {titulo}
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+            {quantidade}
+          </span>
+        </span>
+        <ChevronDown
+          className={cn("size-4 text-muted-foreground transition-transform", aberto && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {aberto ? <div className="space-y-2 border-t border-border p-3">{children}</div> : null}
+    </section>
+  );
+}
+
 export function RevisaoExtracao({
   propostas,
   onAplicar,
