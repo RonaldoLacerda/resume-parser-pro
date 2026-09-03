@@ -88,6 +88,17 @@ export function RevisaoExtracao({
 }) {
   const [campos, setCampos] = useState<PropostaCampo[]>(propostas.campos);
   const [itens, setItens] = useState<PropostaItem[]>(propostas.itens);
+  /** Dropdowns abertos por título de etapa; "Dados gerais" e "Experiências..." começam abertos. */
+  const [abertos, setAbertos] = useState<Set<string>>(
+    () => new Set(["Dados gerais", "Experiências e formações"]),
+  );
+  const alternar = (titulo: string) =>
+    setAbertos((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(titulo)) novo.delete(titulo);
+      else novo.add(titulo);
+      return novo;
+    });
 
   const aceitos = useMemo(
     () => campos.filter((c) => c.aceito).length + itens.filter((i) => i.aceito).length,
