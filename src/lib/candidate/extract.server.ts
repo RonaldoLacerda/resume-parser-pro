@@ -1,4 +1,5 @@
 import { responderJson, transcrever } from "@/lib/ai/gateway.server";
+import { MODALIDADES, NIVEIS_ENSINO, SITUACOES, TIPOS_CONTRATO, UFS } from "./opcoes";
 import { normalizarExtracao } from "./normalizar";
 
 /**
@@ -7,11 +8,9 @@ import { normalizarExtracao } from "./normalizar";
  */
 
 const str = { type: "string" } as const;
-const num = { type: "number" } as const;
-const int = { type: "integer" } as const;
 const strArray = { type: "array", items: str } as const;
 
-/** OpenAI strict mode exige `required` com todas as chaves. */
+/** OpenAI strict mode exige `required` com todas as chaves; use "" quando não houver dado. */
 function obj<T extends Record<string, unknown>>(properties: T) {
   return {
     type: "object",
@@ -22,10 +21,12 @@ function obj<T extends Record<string, unknown>>(properties: T) {
 }
 
 /**
- * Schema ajustado para os padrões do banco de dados (objetos de chave/valor e datas separadas).
+ * Schema espelha 1:1 os campos do formulário (types.ts) que fazem sentido
+ * extrair de um currículo/áudio. Campos puramente operacionais (senha,
+ * "como nos encontrou", antecedentes) ficam de fora de propósito.
  */
 const EXTRACAO_SCHEMA = obj({
-  dados_gerais: obj({
+  geral: obj({
     nomeCompleto: str,
     email: str,
     cpf: str,
@@ -59,54 +60,29 @@ const EXTRACAO_SCHEMA = obj({
     items: obj({
       empresa: str,
       cargo: str,
-      data_inicio: obj({
-        inicio_mes: int,
-        inicio_ano: int,
-      }),
-      data_desligamento: obj({
-        desligamento_mes: int,
-        desligamento_ano: int,
-      }),
-      atividades_exercidas: str,
-      motivo_saida: str,
-      estado: str,
+      atual: { type: "boolean" },
+      inicio: str,
+      desligamento: str,
       cidade: str,
+      estado: str,
+      tipoContrato: str,
+      atividades: str,
     }),
   },
   formacoes: {
     type: "array",
     items: obj({
-      nivel_ensino: obj({
-        nivel_ensino: str,
-        value: str,
-      }),
-      situacao: obj({
-        situacao: str,
-        value: str,
-      }),
-      inicio: obj({
-        inicio_mes: int,
-        inicio_ano: int,
-      }),
-      conclusao: obj({
-        fim_mes: int,
-        fim_ano: int,
-      }),
+      nivelEnsino: str,
+      situacao: str,
+      curso: str,
       instituicao: str,
+      inicio: str,
+      conclusao: str,
       modalidade: str,
     }),
   },
   profissionais: obj({
-    idiomas: {
-      type: "array",
-      items: obj({
-        idioma: str,
-        situacao: obj({
-          situacao: str,
-          value: num,
-        }),
-      }),
-    },
+    idiomas: strArray,
     cargosInteresse: strArray,
     conhecimentos: strArray,
     pretensaoSalarial: str,
@@ -119,34 +95,46 @@ const EXTRACAO_SCHEMA = obj({
     type: "array",
     items: obj({
       campo: str,
-      confianca: num,
+      confianca: { type: "number" },
+      trecho: str,
     }),
   },
 });
 
 /**
- * Instruções alinhadas com as regras do banco de dados e mapeamentos de enums.
+ * Prompt em blocos: (1) papel e regra anti-alucinação, (2) formatos/máscaras,
+ * (3) valores exatos aceitos pelos selects (evita "São Paulo" onde o form quer "SP"),
+ * (4) heurísticas de reconhecimento de currículo BR, (5) evidências.
+ * Mantido curto — cada 100 tokens aqui se repetem em TODA chamada.
  */
 const INSTRUCOES = [
   "Você extrai dados de currículos brasileiros para preencher um cadastro.",
   "Priorize: dados gerais, experiências profissionais e formação acadêmica.",
-  "Responda apenas com o JSON do schema.",
-  "NÃO inclua chaves vazias ou com valor 0 se o dado não for explicitamente encontrado.",
-  // Regra de Estados
-  "ESTADOS: Traga SEMPRE o NOME COMPLETO do estado por extenso (ex: 'São Paulo' ao invés de 'SP', 'Rio de Janeiro' ao invés de 'RJ').",
-  // Experiências
-  "Experiências: data_inicio (inicio_mes, inicio_ano como inteiros) e data_desligamento (desligamento_mes, desligamento_ano como inteiros). Se houver data de desligamento/fim, considere concluído/finalizado.",
-  // Formações e Mapeamentos
-  "Formações: Se houver data de conclusão/fim, a situação deve ser obrigatoriamente Concluído/Finalizado.",
-  "nivel_ensino deve mapear nivel_ensino e value -> Ensino Fundamental: F | Ensino Médio: E | Ensino Médio - Técnico Integrado: I | Técnico/Profissionalizante: C | Curso Extra Currícular: D | Certificação: R | Superior: S | Mestrado: M | Pós Graduação/Master/MBA: P | Doutorado: U | PhD: H.",
-  "situacao de formação deve mapear situacao e value -> Concluído: C | Em Andamento: A | Trancada: T | Não Finalizado: N.",
-  "inicio das formações possui inicio_mes e inicio_ano (inteiros); conclusao possui fim_mes e fim_ano (inteiros).",
-  // Idiomas
-  "Idiomas em profissionais.idiomas devem conter idioma (string) e situacao com chave/valor: Básico (value: 1), Intermediário (value: 2), Avançado (value: 3), Fluente (value: 4).",
+  "Responda apenas com o JSON do schema. Sem informação, use string vazia ou lista vazia — nunca invente dados nem deduza CPF/RG/datas.",
+  // Formatos
+  "Formatos: CPF 000.000.000-00; CEP 00000-000; celular/telefone (DD) 9XXXX-XXXX sem +55 (coloque 55 em ddiCelular);",
+  "datas de início/conclusão/desligamento mm/aaaa; dataNascimento dd/mm/aaaa; pretensaoSalarial só o número em reais (ex.: 3500).",
+  // Enumerações dos selects
+  `Estados (estadoNascimento, endereco.estado, experiencias.estado) SEMPRE em sigla: ${UFS.join(", ")}.`,
+  "sexo: Feminino | Masculino. estadoCivil: Solteiro(a) | Casado(a) | Divorciado(a) | Viúvo(a).",
+  `tipoContrato: ${TIPOS_CONTRATO.join(" | ")}. nivelEnsino: ${NIVEIS_ENSINO.join(" | ")}.`,
+  `situacao: ${SITUACOES.join(" | ")}. modalidade: ${MODALIDADES.join(" | ")}.`,
+  "disponibilidadeMudanca/disponibilidadeViagens: Sim | Não (só se o texto mencionar).",
+  // Heurísticas
+  "Reconheça sinônimos: 'Objetivo'/'Cargo pretendido' → cargosInteresse; 'Perfil'/'Sobre mim' → resumoProfissional;",
+  "'Habilidades'/'Competências'/'Ferramentas'/'Informática' → conhecimentos (um item por tecnologia/competência, sem frases);",
+  "idiomas no formato 'Inglês - Avançado'. Bacharelado/Licenciatura → nivelEnsino Superior; MBA/Especialização → Pós-graduação.",
+  "Endereço: separe logradouro, número, complemento, bairro, cidade, estado e CEP mesmo quando vierem numa linha só.",
+  "Experiências e formações da mais recente para a mais antiga; 'atual'/'presente'/'até o momento' → atual=true e desligamento vazio.",
+  "Atividades exercidas: até 400 caracteres, texto corrido, sem bullets.",
   // Evidências
-  "Em 'evidencias', inclua um item para CADA campo extraído contendo apenas 'campo' e 'confianca' (número de 0 a 1). Não inclua o trecho.",
+  "Em 'evidencias', inclua um item para CADA campo preenchido e para cada experiência/formação:",
+  "campo = caminho do dado ('geral.nomeCompleto', 'endereco.cep', 'profissionais.idiomas', 'experiencias.0', 'formacoes.1');",
+  "confianca = número de 0 a 1 indicando o quanto o dado é explícito na fonte (1 = literal, <0.6 = inferido);",
+  "trecho = citação curta e literal (até 160 caracteres) do texto original que embasou o dado.",
 ].join(" ");
 
+/** Limite de contexto: currículos raramente passam disso e evita custo desnecessário. */
 const MAX_CHARS = 18000;
 
 export type ExtracaoBruta = Record<string, unknown>;
@@ -155,6 +143,7 @@ export function normalizarTexto(texto: string) {
   return texto.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, MAX_CHARS);
 }
 
+/** Chamada única + normalização determinística (custo zero) dos valores para os selects. */
 async function extrair(content: Parameters<typeof responderJson>[0]["content"]) {
   const bruto = await responderJson<ExtracaoBruta>({
     instructions: INSTRUCOES,
